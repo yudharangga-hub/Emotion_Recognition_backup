@@ -8,6 +8,29 @@ venv/
 .env
 .ipynb_checkpoints/
 
-# Data / models besar
+# VS Code / editor
+.vscode/
+*.code-workspace
+
+# Data and model outputs
 data/
 models/
+backup_scripts/
+
+# Generated artifacts
+gradcam_result.png
+grafik_distribusi_data.png
+
+# Python packaging
+*.egg-info/
+.dist-info/
+build/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# System files
+Thumbs.db
+.DS_Store
