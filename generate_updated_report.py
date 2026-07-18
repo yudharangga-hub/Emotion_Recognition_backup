@@ -1,0 +1,111 @@
+"""
+Generate Updated Report dengan Data Akurat dari Confusion Matrix Terbaru
+Update: ResNet-50 78.30%, ViT 81.89%
+"""
+
+import json
+
+# Data akurat dari confusion matrix verification
+data_report = {
+    "title": "Emotion Recognition Model Comparison",
+    "metadata": {
+        "dataset": "FER2013",
+        "test_samples": 4981,
+        "emotion_categories": 7,
+        "last_updated": "2026-05-31"
+    },
+    "models": {
+        "resnet50": {
+            "name": "ResNet-50 (CNN)",
+            "overall_metrics": {
+                "accuracy": 78.30,
+                "precision": 78.5,
+                "recall": 78.3,
+                "f1_score": 78.2
+            },
+            "per_class_metrics": {
+                "angry": {"precision": 74.8, "recall": 68.1, "f1_score": 71.3, "support": 592},
+                "disgust": {"precision": 94.0, "recall": 92.9, "f1_score": 93.5, "support": 592},
+                "fear": {"precision": 70.3, "recall": 63.2, "f1_score": 66.5, "support": 592},
+                "happy": {"precision": 92.1, "recall": 88.4, "f1_score": 90.3, "support": 1141},
+                "neutral": {"precision": 66.8, "recall": 76.9, "f1_score": 71.5, "support": 818},
+                "sad": {"precision": 66.6, "recall": 62.4, "f1_score": 64.4, "support": 654},
+                "surprise": {"precision": 78.1, "recall": 89.0, "f1_score": 83.2, "support": 592}
+            },
+            "major_confusions": [
+                {"true": "sad", "predicted": "neutral", "count": 126, "percentage": 19.3},
+                {"true": "neutral", "predicted": "sad", "count": 77, "percentage": 9.4},
+                {"true": "happy", "predicted": "neutral", "count": 63, "percentage": 5.5},
+                {"true": "fear", "predicted": "angry", "count": 57, "percentage": 9.6},
+                {"true": "fear", "predicted": "surprise", "count": 56, "percentage": 9.5},
+                {"true": "angry", "predicted": "neutral", "count": 56, "percentage": 9.5}
+            ],
+            "characteristics": {
+                "efficiency": "High",
+                "parameters": "~25M",
+                "inference_latency": "30-40ms",
+                "memory_footprint": "~100MB",
+                "fps_realtime": "25-30 FPS",
+                "training_convergence": "Epoch 15",
+                "recommended_for": ["Mobile deployment", "Edge devices", "Real-time streaming"]
+            }
+        },
+        "vit": {
+            "name": "Vision Transformer (ViT)",
+            "overall_metrics": {
+                "accuracy": 81.89,
+                "precision": 82.0,
+                "recall": 81.9,
+                "f1_score": 81.9
+            },
+            "per_class_metrics": {
+                "angry": {"precision": 77.9, "recall": 73.8, "f1_score": 75.8, "support": 592},
+                "disgust": {"precision": 95.8, "recall": 95.6, "f1_score": 95.7, "support": 592},
+                "fear": {"precision": 77.9, "recall": 72.6, "f1_score": 75.2, "support": 592},
+                "happy": {"precision": 90.5, "recall": 90.9, "f1_score": 90.7, "support": 1141},
+                "neutral": {"precision": 71.1, "recall": 78.0, "f1_score": 74.4, "support": 818},
+                "sad": {"precision": 69.0, "recall": 67.4, "f1_score": 68.2, "support": 654},
+                "surprise": {"precision": 89.1, "recall": 89.5, "f1_score": 89.3, "support": 592}
+            },
+            "major_confusions": [
+                {"true": "sad", "predicted": "neutral", "count": 105, "percentage": 16.1},
+                {"true": "neutral", "predicted": "sad", "count": 71, "percentage": 8.7},
+                {"true": "happy", "predicted": "neutral", "count": 62, "percentage": 5.4},
+                {"true": "fear", "predicted": "sad", "count": 52, "percentage": 8.8},
+                {"true": "sad", "predicted": "fear", "count": 50, "percentage": 7.6},
+                {"true": "angry", "predicted": "sad", "count": 50, "percentage": 8.4}
+            ],
+            "characteristics": {
+                "efficiency": "Moderate",
+                "parameters": "~85M",
+                "inference_latency": "50-70ms",
+                "memory_footprint": "~340MB",
+                "fps_realtime": "15-20 FPS",
+                "training_convergence": "Epoch 50",
+                "stability": "High",
+                "recommended_for": ["Server-side deployment", "High-accuracy requirements", "Batch processing"]
+            }
+        }
+    },
+    "comparison": {
+        "accuracy_difference": "+3.59% (ViT better)",
+        "key_finding": "ViT outperforms ResNet-50 on overall accuracy and per-class metrics",
+        "main_confusion_pattern": "Both models struggle with Sad-Neutral discrimination (19.3% for ResNet, 16.1% for ViT)",
+        "best_for_mobile": "ResNet-50",
+        "best_for_accuracy": "ViT"
+    },
+    "emotion_difficulty_ranking": {
+        "easiest": ["Happy", "Disgust", "Surprise"],
+        "moderate": ["Angry", "Neutral"],
+        "challenging": ["Sad", "Fear"]
+    }
+}
+
+# Save to JSON
+with open('web_app/static/model_comparison_report.json', 'w') as f:
+    json.dump(data_report, f, indent=2)
+
+print("[SUCCESS] Model comparison report updated!")
+print(f"  ResNet-50: {data_report['models']['resnet50']['overall_metrics']['accuracy']}%")
+print(f"  ViT: {data_report['models']['vit']['overall_metrics']['accuracy']}%")
+print(f"  Difference: {data_report['comparison']['accuracy_difference']}")

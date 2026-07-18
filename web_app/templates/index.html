@@ -1,0 +1,416 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="dashboard-grid">
+    
+    <div class="scanner-container">
+        <div style="position:absolute; top:10px; left:15px; z-index:10; font-size:11px; letter-spacing:1px; background:rgba(0,0,0,0.6); padding:5px 10px; border-left:3px solid #00f3ff;">
+            SYSTEM STATUS: <span style="color:#00ff00;">ONLINE</span><br>
+            <span style="color:#aaa; font-size:9px;">CAM SOURCE: VIDEO_0</span>
+        </div>
+
+        <div class="scan-line"></div>
+        
+        <img src="{{ url_for('video_feed') }}" alt="Video Stream" class="video-feed" id="liveVideo" crossorigin="anonymous">
+        
+        <div class="corner top-left" style="position:absolute; top:10px; left:10px; width:30px; height:30px; border-top:3px solid #00f3ff; border-left:3px solid #00f3ff;"></div>
+        <div class="corner top-right" style="position:absolute; top:10px; right:10px; width:30px; height:30px; border-top:3px solid #00f3ff; border-right:3px solid #00f3ff;"></div>
+        <div class="corner bottom-left" style="position:absolute; bottom:10px; left:10px; width:30px; height:30px; border-bottom:3px solid #00f3ff; border-left:3px solid #00f3ff;"></div>
+        <div class="corner bottom-right" style="position:absolute; bottom:10px; right:10px; width:30px; height:30px; border-bottom:3px solid #00f3ff; border-right:3px solid #00f3ff;"></div>
+
+        <button onclick="takeSnapshot()" class="nav-btn" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10; cursor: pointer; background: rgba(0,0,0,0.8); border: 1px solid #00f3ff; padding: 10px 30px; box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);">
+            [ ANALYZE FRAME ]
+        </button>
+    </div>
+
+    <div class="radar-container">
+        <div class="radar-header">
+            <h3 style="margin:0; color:#00f3ff; font-size:14px;">PSYCHO-RADAR</h3>
+            <p style="margin:0; font-size:9px; color:#888;">RUSSELL'S CIRCUMPLEX MODEL</p>
+        </div>
+        
+        <div class="radar-screen-wrapper">
+            <div class="radar-screen">
+                <div style="position:absolute; top:50%; width:100%; height:1px; background:rgba(0,243,255,0.3);"></div>
+                <div style="position:absolute; left:50%; height:100%; width:1px; background:rgba(0,243,255,0.3);"></div>
+                <div style="position:absolute; top:25%; width:100%; height:1px; background:rgba(0,243,255,0.1); border-top:1px dashed rgba(0,243,255,0.2);"></div>
+                <div style="position:absolute; top:75%; width:100%; height:1px; background:rgba(0,243,255,0.1); border-top:1px dashed rgba(0,243,255,0.2);"></div>
+                
+                <span style="position:absolute; top:5px; left:50%; transform:translateX(-50%); font-size:8px; color:#fff;">HIGH ENERGY</span>
+                <span style="position:absolute; bottom:5px; left:50%; transform:translateX(-50%); font-size:8px; color:#aaa;">LOW ENERGY</span>
+                <span style="position:absolute; left:5px; top:50%; font-size:8px; color:#ff0055;">NEG</span>
+                <span style="position:absolute; right:5px; top:50%; font-size:8px; color:#00ff00;">POS</span>
+
+                <div id="emotionDot"></div>
+            </div>
+        </div>
+
+        <div class="radar-data">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <span style="color:#aaa; font-size:10px;">STATE:</span>
+                <span id="radarState" style="color:#fff; font-weight:bold; font-size:14px;">CALIBRATING</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#00f3ff;">
+                <span>Valence (X):</span><span id="valVal">0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#ff0055;">
+                <span>Arousal (Y):</span><span id="aroVal">0.00</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="resultModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 style="color:#00f3ff; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:20px;">/// XAI DEEP ANALYSIS ///</h2>
+        <div class="image-row">
+            <div class="image-box">
+                <p>SOURCE</p>
+                <img id="originalImg" class="modal-img-result">
+                <div class="snapshot-prediction"><strong>Prediksi snapshot:</strong> <span id="snapshotPrediction">-</span></div>
+                <div class="source-caption" id="sourceCaption">Ensemble dan threshold adaptif digunakan untuk hasil snapshot.</div>
+            </div>
+            <div class="image-box">
+                <p>ATTENTION MAP</p>
+                <img id="gradcamImg" class="modal-img-result" style="border-color:#ff0055;">
+            </div>
+        </div>
+        <div class="analysis-meta">
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <h4>Hasil Algoritma</h4>
+                    <div class="analysis-item"><span>ResNet-50:</span><strong id="resnetResult">-</strong></div>
+                    <div class="analysis-item"><span>ViT (Transformer):</span><strong id="vitResult">-</strong></div>
+                </div>
+                <div class="analysis-card">
+                    <h4>Psycho Radar</h4>
+                    <div class="analysis-item"><span>Status Radar:</span><strong id="radarResult">-</strong></div>
+                    <div class="analysis-item"><span>Relevansi:</span><strong id="radarRelation">Sinkron</strong></div>
+                </div>
+                <div class="analysis-card">
+                    <h4>Real-time Metrics</h4>
+                    <div class="analysis-item"><span>FPS Snapshot:</span><strong id="fpsResult">-</strong></div>
+                    <div class="analysis-item"><span>Ensemble:</span><strong id="ensembleResult">-</strong></div>
+                </div>
+                <div class="analysis-card circumplex-card">
+                    <h4>Model Sirkumpleks Russell</h4>
+                    <div class="circumplex-label">Emosi</div>
+                    <strong id="circumplexEmotion">-</strong>
+                    <div class="circumplex-plot">
+                        <div class="circumplex-axis"></div>
+                        <div class="circumplex-axis vertical"></div>
+                        <div id="circumplexDot" class="circumplex-dot"></div>
+                    </div>
+                    <div class="analysis-item"><span>Valence:</span><strong id="circumplexValence">0.00</strong></div>
+                    <div class="analysis-item"><span>Arousal:</span><strong id="circumplexArousal">0.00</strong></div>
+                </div>
+            </div>
+            
+            <!-- TABEL HASIL ANALISIS -->
+            <div style="margin-top: 25px; border: 1px solid #00f3ff; padding: 15px; background: rgba(0, 10, 20, 0.9);">
+                <h4 style="margin-top: 0; color: #00f3ff; text-transform: uppercase; letter-spacing: 1px;">📊 Ringkasan Hasil Analisis</h4>
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Komponen</th>
+                            <th>Model/Metrik</th>
+                            <th>Hasil</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="2" class="metric-label">🤖 Prediksi Model</td>
+                            <td>ResNet-50</td>
+                            <td class="metric-value" id="tableResnet">-</td>
+                            <td id="tableResnetConf">-</td>
+                        </tr>
+                        <tr>
+                            <td>ViT (Transformer)</td>
+                            <td class="metric-value" id="tableVit">-</td>
+                            <td id="tableVitConf">-</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-label">✅ Keputusan Ensemble</td>
+                            <td id="tableEnsembleReason">-</td>
+                            <td class="metric-value" id="tableEnsemble">-</td>
+                            <td id="tableEnsembleConf">-</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-label">📈 Performa Real-time</td>
+                            <td>FPS & Konsistensi</td>
+                            <td><span id="tableAgreement">-</span> | <span id="tableFps">-</span> fps</td>
+                            <td id="tableConsistency">-</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-label">🎯 Koordinat Russell</td>
+                            <td>Valence-Arousal</td>
+                            <td id="tableValence">-</td>
+                            <td id="tableArousal">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- INTERPRETASI -->
+            <div class="analysis-interpretation" id="analysisText">
+                Hasil interpretasi akan muncul di sini setelah analisis frame selesai.
+            </div>
+
+            <!-- TOMBOL AKSI -->
+            <div class="action-buttons-container">
+                <button class="action-btn btn-back" onclick="closeModal()">
+                    ← Kembali
+                </button>
+                <button class="action-btn btn-save" onclick="saveAnalysisReport()">
+                    💾 Simpan Laporan
+                </button>
+                <button class="action-btn btn-print" onclick="printReportPDF()">
+                    🖨️ Cetak PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- LOGIKA RADAR ---
+    const emotionMap = {
+        'Happy': [0.8, 0.6], 'Surprise': [0.2, 0.9], 'Neutral': [0.0, 0.0],
+        'Sad': [-0.6, -0.4], 'Fear': [-0.3, 0.8], 'Angry': [-0.7, 0.7], 'Disgust': [-0.6, 0.3]
+    };
+
+    function updateRadar() {
+        fetch('/current_emotion').then(res=>res.json()).then(data=>{
+            const coords = emotionMap[data.emotion] || [0,0];
+            // Jitter effect
+            const jX = (Math.random()-0.5)*0.05;
+            const jY = (Math.random()-0.5)*0.05;
+            const X = coords[0] + jX;
+            const Y = coords[1] + jY;
+
+            // Mapping ke CSS % (50% adalah 0)
+            const cssX = 50 + (X * 40); 
+            const cssY = 50 - (Y * 40);
+
+            const dot = document.getElementById('emotionDot');
+            dot.style.left = cssX + '%'; dot.style.top = cssY + '%';
+            
+            // Ubah Warna
+            if(X > 0.1) dot.style.background = '#00ff00';
+            else if(X < -0.1) dot.style.background = '#ff0055';
+            else dot.style.background = '#00f3ff';
+
+            document.getElementById('radarState').innerText = data.emotion.toUpperCase();
+            document.getElementById('valVal').innerText = X.toFixed(2);
+            document.getElementById('aroVal').innerText = Y.toFixed(2);
+        }).catch(e=>{});
+    }
+    setInterval(updateRadar, 250);
+
+    // --- SNAPSHOT ---
+    function takeSnapshot() {
+        const video = document.getElementById('liveVideo');
+        const canvas = document.createElement('canvas');
+        // Gunakan ukuran asli video jika tersedia, fallback ke dimensi element bila perlu.
+        const width = video.naturalWidth || video.width || 640;
+        const height = video.naturalHeight || video.height || 480;
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(video, 0, 0, width, height);
+        
+        const dataURL = canvas.toDataURL('image/jpeg');
+
+        fetch('/snapshot_analysis', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({image: dataURL})
+        })
+        .then(r=>r.json()).then(d=>{
+            if (d.error) {
+                alert('Analisis gagal: ' + d.error);
+                return;
+            }
+            document.getElementById('originalImg').src = d.source_image;
+            document.getElementById('snapshotPrediction').innerText = d.ensemble_label;
+            document.getElementById('sourceCaption').innerText = d.ensemble_reason === 'agreement' ? 'Model sepakat, ensemble digunakan.' : d.ensemble_reason === 'confident' ? 'Model confident digunakan berdasarkan threshold adaptif.' : d.ensemble_reason === 'trusted' ? 'Prediksi tunggal dipercaya karena confidence cukup tinggi.' : d.ensemble_reason === 'ensemble' ? 'Dipilih label dengan confidence lebih tinggi dari kedua model.' : 'Diskrepansi rendah; fallback Netral.';
+            document.getElementById('gradcamImg').src = d.result_image;
+            document.getElementById('resnetResult').innerText = `${d.prediction_resnet} (${d.confidence_resnet}%)`;
+            document.getElementById('vitResult').innerText = `${d.prediction_vit} (${d.confidence_vit}%)`;
+            document.getElementById('radarResult').innerText = d.ensemble_label.toUpperCase();
+            document.getElementById('radarRelation').innerText = d.agreement ? 'Konsisten' : 'Perlu verifikasi';
+            document.getElementById('fpsResult').innerText = `${d.current_fps} fps`;
+            document.getElementById('ensembleResult').innerText = d.ensemble_reason === 'agreement' ? 'Agreement' : d.ensemble_reason === 'confident' ? 'Adaptive' : 'Ambiguous';
+            document.getElementById('circumplexEmotion').innerText = d.ensemble_label.toUpperCase();
+            document.getElementById('circumplexValence').innerText = d.russell_valence.toFixed(2);
+            document.getElementById('circumplexArousal').innerText = d.russell_arousal.toFixed(2);
+            drawCircumplex(d.ensemble_label_en);
+            updateAnalysisTable(d);
+            document.getElementById('analysisText').innerHTML = buildAnalysisText(d);
+            document.getElementById('resultModal').style.display = 'block';
+        });
+    }
+
+    function getEmotionCoords(emotion) {
+        return emotionMap[emotion] || [0, 0];
+    }
+
+    function drawCircumplex(emotion) {
+        const coords = getEmotionCoords(emotion);
+        const dot = document.getElementById('circumplexDot');
+        const center = 70;
+        const scale = 48;
+        const x = center + coords[0] * scale;
+        const y = center - coords[1] * scale;
+        dot.style.left = `${x}px`;
+        dot.style.top = `${y}px`;
+    }
+
+    function buildAnalysisText(d) {
+        // Buat tabel interpretasi yang compact dan rapi
+        let html = '<table class="interpretation-table"><thead><tr><th>Komponen Analisis</th><th>Deskripsi</th></tr></thead><tbody>';
+        
+        html += '<tr><td class="label-col">📌 Interpretasi Analisis</td><td class="value-col">Analisis mengacu pada capture wajah yang sama dengan attention map Grad-CAM. Source image dan heatmap diproses konsisten untuk hasil yang valid.</td></tr>';
+        
+        html += '<tr><td class="label-col">🎯 Fokus Penelitian</td><td class="value-col">Membandingkan performa akurasi dan efisiensi antara ResNet-50 dan ViT-Base pada dataset emosi dengan data tidak seimbang, serta menilai transparansi keputusan model.</td></tr>';
+        
+        html += `<tr><td class="label-col">⚙️ Performa & Efisiensi</td><td class="value-col">ResNet-50: <strong>${d.prediction_resnet}</strong> (${d.confidence_resnet}%) | ViT: <strong>${d.prediction_vit}</strong> (${d.confidence_vit}%). ResNet-50 lebih cepat untuk real-time, ViT lebih stabil menangkap pola global.</td></tr>`;
+        
+        html += `<tr><td class="label-col">⏱️ Pengukuran FPS</td><td class="value-col">Sistem real-time berhasil merekam sekitar <strong>${d.current_fps}</strong> fps saat snapshot, penting sebagai indikator latency dan responsiveness sistem.</td></tr>`;
+        
+        html += `<tr><td class="label-col">🔍 Grad-CAM Top Kelas</td><td class="value-col">${d.top_classes.map(c => `<strong>${c.label}</strong> (${c.confidence}%)`).join(' • ')}</td></tr>`;
+        
+        html += '<tr><td class="label-col">🎨 Grad-CAM sebagai XAI</td><td class="value-col">Heatmap visual menunjukkan area wajah yang berkontribusi pada prediksi model, membantu menjelaskan apakah model mengandalkan fitur penting atau artefak latar belakang.</td></tr>';
+        
+        html += '<tr><td class="label-col">📊 Pemetaan Russell</td><td class="value-col">Visualisasi sirkumpleks menjembatani emosi diskrit dengan dimensi valence-arousal, penting untuk menilai kecocokan deteksi emosi terhadap framework psikologis.</td></tr>';
+        
+        if (d.agreement) {
+            html += `<tr><td class="label-col">✅ Kesimpulan</td><td class="value-col">Kedua model menunjukkan kesepakatan pada prediksi <strong>${d.prediction_resnet}</strong>, memperkuat validitas hasil bagi studi perbandingan performa.</td></tr>`;
+        } else {
+            html += `<tr><td class="label-col">⚠️ Kesimpulan</td><td class="value-col">Perbedaan antara ResNet-50 dan ViT menunjukkan kedua arsitektur memproses informasi visual berbeda, membuka peluang evaluasi lebih lanjut pada akurasi dan penanganan kelas minoritas.</td></tr>`;
+        }
+        
+        html += '<tr><td class="label-col">💡 Rekomendasi</td><td class="value-col">Lanjutkan dengan pengukuran FPS per kelas, gunakan Grad-CAM untuk tiap emosi, serta gunakan ensemble atau threshold adaptif untuk menjaga kualitas pemetaan emosi ke Russell dalam real-time.</td></tr>';
+        
+        html += '</tbody></table>';
+        return html;
+    }
+
+    // STORE ANALISIS DATA UNTUK SAVE/PRINT
+    let currentAnalysisData = null;
+
+    function updateAnalysisTable(d) {
+        currentAnalysisData = d;
+        
+        document.getElementById('tableResnet').innerText = d.prediction_resnet;
+        document.getElementById('tableResnetConf').innerText = `${d.confidence_resnet}%`;
+        
+        document.getElementById('tableVit').innerText = d.prediction_vit;
+        document.getElementById('tableVitConf').innerText = `${d.confidence_vit}%`;
+        
+        document.getElementById('tableEnsembleReason').innerText = d.ensemble_reason === 'agreement' ? 'Model Setuju' : d.ensemble_reason === 'confident' ? 'Threshold Adaptif' : d.ensemble_reason === 'trusted' ? 'Prediksi tunggal tepercaya' : d.ensemble_reason === 'ensemble' ? 'Ensemble confidence' : 'Fallback';
+        document.getElementById('tableEnsemble').innerText = d.ensemble_label;
+        document.getElementById('tableEnsembleConf').innerText = d.ensemble_reason === 'agreement' ? '✓' : '⚠';
+        
+        document.getElementById('tableAgreement').innerText = d.agreement ? 'Konsisten' : 'Berbeda';
+        document.getElementById('tableFps').innerText = d.current_fps;
+        document.getElementById('tableConsistency').innerText = d.agreement ? '✓ Ya' : '⚠ Perlu verifikasi';
+        
+        document.getElementById('tableValence').innerText = `${d.russell_valence.toFixed(2)} (Valence)`;
+        document.getElementById('tableArousal').innerText = `${d.russell_arousal.toFixed(2)} (Arousal)`;
+    }
+
+    function closeModal() { document.getElementById('resultModal').style.display = 'none'; }
+    window.onclick = function(e) { if(e.target == document.getElementById('resultModal')) closeModal(); }
+
+    // FUNGSI SIMPAN LAPORAN JSON
+    function saveAnalysisReport() {
+        if (!currentAnalysisData) {
+            alert('Tidak ada data analisis yang tersimpan.');
+            return;
+        }
+
+        const timestamp = new Date().toLocaleString('id-ID');
+        const reportData = {
+            timestamp: timestamp,
+            resnet_prediction: currentAnalysisData.prediction_resnet,
+            resnet_confidence: currentAnalysisData.confidence_resnet,
+            vit_prediction: currentAnalysisData.prediction_vit,
+            vit_confidence: currentAnalysisData.confidence_vit,
+            ensemble_prediction: currentAnalysisData.ensemble_label,
+            ensemble_reason: currentAnalysisData.ensemble_reason,
+            model_agreement: currentAnalysisData.agreement,
+            fps: currentAnalysisData.current_fps,
+            russell_valence: currentAnalysisData.russell_valence,
+            russell_arousal: currentAnalysisData.russell_arousal,
+            top_classes: currentAnalysisData.top_classes
+        };
+
+        const dataStr = JSON.stringify(reportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `emotion_analysis_${Date.now()}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        alert('✓ Laporan berhasil disimpan!');
+    }
+
+    // FUNGSI CETAK PDF
+    function printReportPDF() {
+        if (!currentAnalysisData) {
+            alert('Tidak ada data analisis yang tersimpan.');
+            return;
+        }
+
+        // Buat container khusus untuk PDF yang lebih compact
+        const pdfContainer = document.createElement('div');
+        pdfContainer.style.backgroundColor = 'white';
+        pdfContainer.style.color = 'black';
+        pdfContainer.style.padding = '20px';
+        pdfContainer.style.fontFamily = 'Arial, sans-serif';
+        
+        const modalContent = document.querySelector('.modal-content');
+        const clone = modalContent.cloneNode(true);
+        
+        // Simpan styling untuk tabel interpretasi
+        const style = document.createElement('style');
+        style.innerHTML = `
+            body { background: white !important; }
+            .interpretation-table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 11px; }
+            .interpretation-table th { background: #e0e0e0; color: #000; padding: 8px; text-align: left; font-weight: bold; }
+            .interpretation-table td { border: 1px solid #ddd; padding: 8px; }
+            .interpretation-table .label-col { font-weight: bold; width: 25%; background: #f5f5f5; }
+            .analysis-table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 11px; }
+            .analysis-table th { background: #e0e0e0; color: #000; padding: 8px; text-align: left; font-weight: bold; }
+            .analysis-table td { border: 1px solid #ddd; padding: 8px; }
+            .modal-img-result { max-width: 100%; height: auto; }
+            .image-row { page-break-inside: avoid; margin-bottom: 20px; }
+            .image-box { page-break-inside: avoid; margin-bottom: 15px; }
+            .action-buttons-container { display: none !important; }
+            h2, h4 { color: #000; margin-top: 15px; margin-bottom: 10px; }
+            .analysis-grid { margin-bottom: 20px; }
+            .analysis-card { page-break-inside: avoid; }
+        `;
+        clone.appendChild(style);
+        pdfContainer.appendChild(clone);
+        document.body.appendChild(pdfContainer);
+
+        const opt = {
+            margin: [8, 8, 8, 8],
+            filename: `emotion_analysis_${Date.now()}.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+            jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(pdfContainer).save().then(() => {
+            document.body.removeChild(pdfContainer);
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="width: 95%; max-width: 1400px; height: 90%; display: flex; gap: 20px;">
+    
+    <div style="flex: 1; background: rgba(0, 10, 20, 0.8); border: 1px solid #005f66; padding: 25px; overflow-y: auto;">
+        <h2 style="color: #00f3ff; border-bottom: 2px dashed #00f3ff; padding-bottom: 10px; margin-top: 0;">
+            /// SPESIFIKASI SISTEM ///
+        </h2>
+
+        <h3 style="color: #fff; background: rgba(0, 243, 255, 0.1); padding: 5px 10px; margin-top: 20px;">
+            [A] ENVIRONMENT HARDWARE
+        </h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #ccc;">
+            <tr style="border-bottom: 1px solid #333;"><td style="padding: 8px;">GPU Computing</td><td style="color:#00f3ff; font-weight:bold;">NVIDIA GeForce RTX 3080 (Laptop)</td></tr>
+            <tr style="border-bottom: 1px solid #333;"><td style="padding: 8px;">VRAM Capacity</td><td>12 GB GDDR6X</td></tr>
+            <tr style="border-bottom: 1px solid #333;"><td style="padding: 8px;">CUDA Cores</td><td>6144 Units (Ampere Arch)</td></tr>
+            <tr><td style="padding: 8px;">AI Framework</td><td>PyTorch 2.x + CUDA 12.x Toolkit</td></tr>
+        </table>
+
+        <h3 style="color: #fff; background: rgba(255, 0, 85, 0.1); padding: 5px 10px; margin-top: 30px;">
+            [B] MODEL CONFIGURATION
+        </h3>
+        <ul style="list-style: none; padding-left: 10px; line-height: 1.8; font-size: 12px; color: #ccc;">
+            <li><strong style="color:#00f3ff">Model 1 (CNN):</strong> ResNet-50 (Pretrained ImageNet)
+                <ul style="padding-left: 15px; color: #888; font-size: 10px;">
+                    <li>Layers: 50 Deep Residual Layers</li>
+                    <li>Params: ~25.6 Juta</li>
+                    <li>Focus: Fitur Lokal (Tekstur, Sudut)</li>
+                </ul>
+            </li>
+            <li style="margin-top: 10px;"><strong style="color:#ff0055">Model 2 (Transformer):</strong> ViT-Base-Patch16-224
+                <ul style="padding-left: 15px; color: #888; font-size: 10px;">
+                    <li>Mechanism: Multi-Head Self-Attention</li>
+                    <li>Params: ~86 Juta</li>
+                    <li>Focus: Konteks Global (Hubungan antar bagian wajah)</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div style="flex: 1.2; background: rgba(0, 5, 10, 0.9); border: 1px dashed #00f3ff; padding: 20px; position: relative;">
+        <h3 style="text-align: center; color: #fff; margin-top: 0;">/// REAL-TIME INFERENCE PIPELINE ///</h3>
+        
+        <div class="flow-container">
+            <div class="flow-step">
+                <strong>1. INPUT STREAM</strong><br><span style="font-size:9px; color:#aaa;">Webcam (OpenCV) 640x480 RGB</span>
+            </div>
+            <div class="flow-connector"></div>
+            
+            <div class="flow-step">
+                <strong>2. FACE DETECTION</strong><br><span style="font-size:9px; color:#aaa;">MediaPipe BlazeFace (ROI Crop)</span>
+            </div>
+            <div class="flow-connector"></div>
+
+            <div class="flow-step">
+                <strong>3. PREPROCESSING</strong><br><span style="font-size:9px; color:#aaa;">Resize 224x224, Normalize</span>
+            </div>
+            
+            <div style="display: flex; justify-content: center; width: 100%;">
+                 <div class="split-connector" style="transform: rotate(180deg);"></div>
+                 <div class="flow-connector"></div>
+                 <div class="split-connector"></div>
+            </div>
+
+            <div class="flow-split">
+                <div>
+                    <div class="flow-step">
+                        <strong>4A. RESNET-50</strong><br><span style="font-size:9px; color:#aaa;">CNN Feature Extraction</span>
+                    </div>
+                    <div class="flow-connector" style="margin: 0 auto;"></div>
+                </div>
+                <div>
+                    <div class="flow-step vit">
+                        <strong>4B. VISION TRANSFORMER</strong><br><span style="font-size:9px; color:#aaa;">Self-Attention Mechanism</span>
+                    </div>
+                    <div class="flow-connector" style="margin: 0 auto;"></div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; width: 100%; margin-top: -25px; z-index: -2;">
+                 <div class="split-connector" style="transform: rotate(180deg); width: 50px;"></div>
+                 <div class="flow-connector" style="height: 10px;"></div>
+                 <div class="split-connector" style="width: 50px;"></div>
+            </div>
+
+            <div class="flow-step final">
+                <strong>5. ENSEMBLE VOTING</strong><br><span style="font-size:9px; color:#aaa;">Softmax Averaging & HUD Output</span>
+            </div>
+        </div>
+
+        <div style="position: absolute; bottom: 10px; right: 10px; font-size: 9px; color: #555; text-align: right;">
+            SYSTEM LATENCY: <span style="color:#00ff00">~45ms</span><br>
+            DATA FLOW: <span style="color:#00f3ff">CONTINUOUS</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

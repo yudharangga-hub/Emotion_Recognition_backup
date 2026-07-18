@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="content-panel">
+    <h2 class="panel-title">/// ANALISIS EXPLAINABLE AI (Grad-CAM) ///</h2>
+    
+    <div class="xai-grid">
+        <div class="xai-card">
+            <h3>Visualisasi Fokus Model</h3>
+            <div style="border: 2px solid #00f3ff; display: inline-block; padding: 5px;">
+                <img src="{{ url_for('static', filename='gradcam_clean_resnet50.png') }}" class="report-img" alt="GradCAM Result" style="max-height: 300px;">
+            </div>
+            <p class="desc" style="margin-top: 15px;">
+                Area berwarna <span style="color:red; font-weight:bold; text-shadow: 0 0 5px red;">MERAH</span> menunjukkan bagian wajah 
+                yang dianggap paling penting oleh model ResNet-50 (Sample Test: Happy).
+            </p>
+        </div>
+        
+        <div class="xai-stats">
+            <h3>Interpretasi Ilmiah</h3>
+            <ul class="cyber-list" style="text-align: left; line-height: 1.8;">
+                <li><strong>Metode:</strong> Gradient-weighted Class Activation Mapping (Grad-CAM).</li>
+                <li><strong>Tujuan:</strong> Validasi "Black Box" AI.</li>
+                <li><strong>Analisis:</strong> 
+                    Gambar di samping membuktikan bahwa model fokus pada <span style="color:#00f3ff">Zygomaticus Major</span> (otot senyum) dan kerutan mata.
+                    Ini membuktikan model tidak bias terhadap background/rambut.
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
